@@ -3,6 +3,7 @@ use strict;
 use Net::OAuth;
 use HTTP::Request::Common;
 use LWP::UserAgent;
+use Data::Dumper;
 
 # Twitter settings for mtweet-oauth
 # yeah, this is a shared secred now :-)
@@ -52,7 +53,10 @@ if ($ARGV[0] eq '-request-token') {
     $request->sign;
     
     my $res = $ua->request(POST $request->to_url);
-    die "Something went wrong" unless ($res->is_success);
+    unless ($res->is_success) {
+	print Dumper($res);
+	die "Something went wrong";
+    }
 
     my $response = Net::OAuth->response('request token')->from_post_body($res->content);
     my $oauth_token  = $response->token;
@@ -85,7 +89,10 @@ if ($ARGV[0] eq '-request-token') {
     $request->sign;
     
     $res = $ua->request(POST $request->to_url);
-    die "Something went wrong" unless ($res->is_success);
+    unless ($res->is_success) {
+	print Dumper($res);
+	die "Something went wrong";
+    }
 
     $response = Net::OAuth->response('access token')->from_post_body($res->content);
     my $access_token  = $response->token;
@@ -148,7 +155,5 @@ my $request = Net::OAuth->request("protected resource")->new(
 $request->sign;
 
 my $res = $ua->request(POST $request->to_url);
-die "Something went wrong" unless ($res->is_success);
-
-use Data::Dumper;
 print Dumper($res);
+die "Something went wrong" unless ($res->is_success);
