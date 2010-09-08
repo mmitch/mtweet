@@ -30,13 +30,12 @@ usage: mtweet [ -request-token | <tweet> ]
 The OAuth token is stored in ${HOME}/.mtweet-oauth
 EOF
     ;
-    exit 0;
 }
 
 
 ###### request a new token
 
-if ($ARGV[0] eq '-request-token') {
+else if ($ARGV[0] eq '-request-token') {
 
     # get request token
     my $request = Net::OAuth->request("request token")->new(
@@ -109,51 +108,55 @@ if ($ARGV[0] eq '-request-token') {
     print STORE "user=$username\n";
     close STORE or die "can't close `$oauth_file': $!";
 
-}
+} 
 
 
 ###### do a tweet
 
-# read configuration
-my ($token, $secret, $username);
-open STORE, '<', $oauth_file or die "can't open `$oauth_file': $!";
-while (my $line = <STORE>) {
-    if ($line =~ /^([^=]+)=(.*)$/) {
-	$token =    $2 if $1 eq 'token';
-	$secret =   $2 if $1 eq 'secret';
-	$username = $2 if $1 eq 'user';
+else {
+
+    # read configuration
+    my ($token, $secret, $username);
+    open STORE, '<', $oauth_file or die "can't open `$oauth_file': $!";
+    while (my $line = <STORE>) {
+	if ($line =~ /^([^=]+)=(.*)$/) {
+	    $token =    $2 if $1 eq 'token';
+	    $secret =   $2 if $1 eq 'secret';
+	    $username = $2 if $1 eq 'user';
+	}
     }
+    close STORE or die "can't close `$oauth_file': $!";
+    
+    die "no token in configuration"    unless defined $token;
+    die "no secret in configuration"   unless defined $secret;
+    die "no user in configuration"     unless defined $username;
+    
+    # tweet it
+    my $tweet = join ' ', @ARGV;
+    $tweet =~ s/\s+/ /g;
+    $tweet =~ s/(^\s+|\s+$)//g;
+    die "tweet empty"    if length $tweet < 1;
+    die "tweet too long" if length $tweet > 140;
+
+    my $request = Net::OAuth->request("protected resource")->new(
+	consumer_key => $CONSUMER_KEY,
+	consumer_secret => $CONSUMER_SECRET,
+	request_url => $TWEET_URL,
+	request_method => 'POST',
+	signature_method => 'HMAC-SHA1',
+	timestamp => time(),
+	nonce => 'hlssup9o4djj3488', # TODO generate real nonce!
+	token => $token,
+	token_secret => $secret,
+	extra_params => {
+	    status => $tweet,
+	}
+	);
+
+    $request->sign;
+
+    my $res = $ua->request(POST $request->to_url);
+    print Dumper($res);
+    die "Something went wrong" unless ($res->is_success);
+
 }
-close STORE or die "can't close `$oauth_file': $!";
-
-die "no token in configuration"    unless defined $token;
-die "no secret in configuration"   unless defined $secret;
-die "no user in configuration"     unless defined $username;
-
-# tweet it
-my $tweet = join ' ', @ARGV;
-$tweet =~ s/\s+/ /g;
-$tweet =~ s/(^\s+|\s+$)//g;
-die "tweet empty"    if length $tweet < 1;
-die "tweet too long" if length $tweet > 140;
-
-my $request = Net::OAuth->request("protected resource")->new(
-    consumer_key => $CONSUMER_KEY,
-    consumer_secret => $CONSUMER_SECRET,
-    request_url => $TWEET_URL,
-    request_method => 'POST',
-    signature_method => 'HMAC-SHA1',
-    timestamp => time(),
-    nonce => 'hlssup9o4djj3488', # TODO generate real nonce!
-    token => $token,
-    token_secret => $secret,
-    extra_params => {
-	status => $tweet,
-    }
-    );
-
-$request->sign;
-
-my $res = $ua->request(POST $request->to_url);
-print Dumper($res);
-die "Something went wrong" unless ($res->is_success);
