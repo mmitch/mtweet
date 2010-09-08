@@ -1,0 +1,7 @@
+mtweet - Mitch's commandline tweeter with OAuth support
+
+http://github.com/mmitch/mtweet
+licensed under GNU GPL
+
+Twitter switched off the old direct API and OAuth is needed now.  I have not
+yet found a simple client with OAuth support, so I'm rolling my own...
