@@ -11,6 +11,7 @@ my $CONSUMER_SECRET = 'uVXdQxjJjxLKYk90Fw7eVDgMNg8h2A6j6lBzdxTsYBU';
 my $REQUEST_URL =     'https://api.twitter.com/oauth/request_token';
 my $ACCESS_URL =      'https://api.twitter.com/oauth/access_token';
 my $AUTHORIZE_URL =   'https://api.twitter.com/oauth/authorize';
+my $TWEET_URL =       'http://api.twitter.com/1/statuses/update.json';
 
 
 # global settings
@@ -18,7 +19,8 @@ $Net::OAuth::PROTOCOL_VERSION = Net::OAuth::PROTOCOL_VERSION_1_0A;
 my $ua = LWP::UserAgent->new;
 my $oauth_file = "$ENV{HOME}/.mtweet-oauth";
 
-# display help text
+
+###### display help text
 
 if (@ARGV == 0) {
     print <<'EOF';
@@ -31,10 +33,11 @@ EOF
 }
 
 
-# request a new token
+###### request a new token
 
 if ($ARGV[0] eq '-request-token') {
 
+    # get request token
     my $request = Net::OAuth->request("request token")->new(
 	consumer_key => $CONSUMER_KEY,
 	consumer_secret => $CONSUMER_SECRET,
@@ -55,6 +58,7 @@ if ($ARGV[0] eq '-request-token') {
     my $oauth_token  = $response->token;
     my $oauth_secret = $response->token_secret;
 
+    # PIN handling
     print "Request token acquired.  Please visit this URL, grab your PIN code and enter it:\n";
     print "${AUTHORIZE_URL}?oauth_token=${oauth_token}\n\n";
 
@@ -64,6 +68,7 @@ if ($ARGV[0] eq '-request-token') {
     chomp $pin;
     die "PIN should only contain numbers!" unless ($pin =~ /^\d+$/);
 
+    # get access token
     $request = Net::OAuth->request("access token")->new(
 	consumer_key => $CONSUMER_KEY,
 	consumer_secret => $CONSUMER_SECRET,
@@ -89,6 +94,7 @@ if ($ARGV[0] eq '-request-token') {
 
     print "successfully connected with account $username\n";
 
+    # store configuration
     umask 0077;
     open STORE, '>', $oauth_file or die "can't open `$oauth_file': $!";
     print STORE "token=$access_token\n";
@@ -98,3 +104,51 @@ if ($ARGV[0] eq '-request-token') {
 
 }
 
+
+###### do a tweet
+
+# read configuration
+my ($token, $secret, $username);
+open STORE, '<', $oauth_file or die "can't open `$oauth_file': $!";
+while (my $line = <STORE>) {
+    if ($line =~ /^([^=]+)=(.*)$/) {
+	$token =    $2 if $1 eq 'token';
+	$secret =   $2 if $1 eq 'secret';
+	$username = $2 if $1 eq 'user';
+    }
+}
+close STORE or die "can't close `$oauth_file': $!";
+
+die "no token in configuration"    unless defined $token;
+die "no secret in configuration"   unless defined $secret;
+die "no user in configuration"     unless defined $username;
+
+# tweet it
+my $tweet = join ' ', @ARGV;
+$tweet =~ s/\s+/ /g;
+$tweet =~ s/(^\s+|\s+$)//g;
+die "tweet empty"    if length $tweet < 1;
+die "tweet too long" if length $tweet > 140;
+
+my $request = Net::OAuth->request("protected resource")->new(
+    consumer_key => $CONSUMER_KEY,
+    consumer_secret => $CONSUMER_SECRET,
+    request_url => $TWEET_URL,
+    request_method => 'POST',
+    signature_method => 'HMAC-SHA1',
+    timestamp => time(),
+    nonce => 'hlssup9o4djj3488', # TODO generate real nonce!
+    token => $token,
+    token_secret => $secret,
+    extra_params => {
+	status => $tweet,
+    }
+    );
+
+$request->sign;
+
+my $res = $ua->request(POST $request->to_url);
+die "Something went wrong" unless ($res->is_success);
+
+use Data::Dumper;
+print Dumper($res);
