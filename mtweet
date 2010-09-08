@@ -1,0 +1,100 @@
+#!/usr/bin/perl -w
+use strict;
+use Net::OAuth;
+use HTTP::Request::Common;
+use LWP::UserAgent;
+
+# Twitter settings for mtweet-oauth
+# yeah, this is a shared secred now :-)
+my $CONSUMER_KEY =    'nbuhWpMZeVZ22AeqVjq0Q';
+my $CONSUMER_SECRET = 'uVXdQxjJjxLKYk90Fw7eVDgMNg8h2A6j6lBzdxTsYBU';
+my $REQUEST_URL =     'https://api.twitter.com/oauth/request_token';
+my $ACCESS_URL =      'https://api.twitter.com/oauth/access_token';
+my $AUTHORIZE_URL =   'https://api.twitter.com/oauth/authorize';
+
+
+# global settings
+$Net::OAuth::PROTOCOL_VERSION = Net::OAuth::PROTOCOL_VERSION_1_0A;
+my $ua = LWP::UserAgent->new;
+my $oauth_file = "$ENV{HOME}/.mtweet-oauth";
+
+# display help text
+
+if (@ARGV == 0) {
+    print <<'EOF';
+usage: mtweet [ -request-token | <tweet> ]
+
+The OAuth token is stored in ${HOME}/.mtweet-oauth
+EOF
+    ;
+    exit 0;
+}
+
+
+# request a new token
+
+if ($ARGV[0] eq '-request-token') {
+
+    my $request = Net::OAuth->request("request token")->new(
+	consumer_key => $CONSUMER_KEY,
+	consumer_secret => $CONSUMER_SECRET,
+	request_url => $REQUEST_URL,
+	request_method => 'POST',
+	signature_method => 'HMAC-SHA1',
+	timestamp => time(),
+	nonce => 'hlssup9o4djj3488', # TODO generate real nonce!
+	callback => 'oob',
+	);
+
+    $request->sign;
+    
+    my $res = $ua->request(POST $request->to_url);
+    die "Something went wrong" unless ($res->is_success);
+
+    my $response = Net::OAuth->response('request token')->from_post_body($res->content);
+    my $oauth_token  = $response->token;
+    my $oauth_secret = $response->token_secret;
+
+    print "Request token acquired.  Please visit this URL, grab your PIN code and enter it:\n";
+    print "${AUTHORIZE_URL}?oauth_token=${oauth_token}\n\n";
+
+    $|++;
+    print "PIN: ";
+    my $pin = <STDIN>;
+    chomp $pin;
+    die "PIN should only contain numbers!" unless ($pin =~ /^\d+$/);
+
+    $request = Net::OAuth->request("access token")->new(
+	consumer_key => $CONSUMER_KEY,
+	consumer_secret => $CONSUMER_SECRET,
+	request_url => $ACCESS_URL,
+	request_method => 'POST',
+	signature_method => 'HMAC-SHA1',
+	timestamp => time(),
+	nonce => 'hlssup9o4djj3488', # TODO generate real nonce!
+	verifier => $pin,
+	token => $oauth_token,
+	token_secret => $oauth_secret,
+	);
+
+    $request->sign;
+    
+    $res = $ua->request(POST $request->to_url);
+    die "Something went wrong" unless ($res->is_success);
+
+    $response = Net::OAuth->response('access token')->from_post_body($res->content);
+    my $access_token  = $response->token;
+    my $access_secret = $response->token_secret;
+    my $username      = $response->extra_params->{screen_name};
+
+    print "successfully connected with account $username\n";
+
+    umask 0077;
+    open STORE, '>', $oauth_file or die "can't open `$oauth_file': $!";
+    print STORE "token=$access_token\n";
+    print STORE "secret=$access_secret\n";
+    print STORE "user=$username\n";
+    close STORE or die "can't close `$oauth_file': $!";
+
+}
+
