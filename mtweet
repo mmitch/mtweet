@@ -35,7 +35,7 @@ EOF
 
 ###### request a new token
 
-else if ($ARGV[0] eq '-request-token') {
+elsif ($ARGV[0] eq '-request-token') {
 
     # get request token
     my $request = Net::OAuth->request("request token")->new(
