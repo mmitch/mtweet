@@ -7,7 +7,8 @@ Twitter switched off the old direct API and OAuth is needed now.  I have not
 yet found a simple client with OAuth support, so I'm rolling my own...
 
 Requirements:
+  Crypt::SSLeay
   HTTP::Request::Common
   LWP::UserAgent
-  Net::OAuth
+  Net::OAuth (at least 0.16)
 (and Data::Dumper for debugging purposes, feel free to comment out)
