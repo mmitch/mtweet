@@ -20,6 +20,7 @@ my $TWEET_URL =       'http://api.twitter.com/1/statuses/update.json';
 
 # global settings
 $Net::OAuth::PROTOCOL_VERSION = Net::OAuth::PROTOCOL_VERSION_1_0A;
+$Data::Dumper::Indent = 1;
 my $ua = LWP::UserAgent->new;
 my $oauth_file = "$ENV{HOME}/.mtweet-oauth";
 
@@ -55,10 +56,7 @@ elsif ($ARGV[0] eq '-request-token') {
     $request->sign;
     
     my $res = $ua->request(POST $request->to_url);
-    unless ($res->is_success) {
-	print Dumper($res);
-	die "Something went wrong";
-    }
+    die Dumper($res) . "Something went wrong" unless $res->is_success;
 
     my $response = Net::OAuth->response('request token')->from_post_body($res->content);
     my $oauth_token  = $response->token;
@@ -91,10 +89,7 @@ elsif ($ARGV[0] eq '-request-token') {
     $request->sign;
     
     $res = $ua->request(POST $request->to_url);
-    unless ($res->is_success) {
-	print Dumper($res);
-	die "Something went wrong";
-    }
+    die Dumper($res) . "Something went wrong" unless $res->is_success;
 
     $response = Net::OAuth->response('access token')->from_post_body($res->content);
     my $access_token  = $response->token;
@@ -159,7 +154,6 @@ else {
     $request->sign;
 
     my $res = $ua->request(POST $request->to_url);
-    print Dumper($res);
-    die "Something went wrong" unless ($res->is_success);
+    die Dumper($res) . 'Something went wrong' unless $res->is_success;
 
 }
