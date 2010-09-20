@@ -1,9 +1,12 @@
 #!/usr/bin/perl -w
 use strict;
-use Net::OAuth;
+
+use Data::Dumper;
 use HTTP::Request::Common;
 use LWP::UserAgent;
-use Data::Dumper;
+use Net::OAuth;
+
+require Crypt::SSLeay;
 
 # Twitter settings for mtweet-oauth
 # yeah, this is a shared secred now :-)
