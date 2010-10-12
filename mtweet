@@ -27,9 +27,9 @@ my $oauth_file = "$ENV{HOME}/.mtweet-oauth";
 
 ###### display help text
 
-if (@ARGV == 0) {
+if (@ARGV == 0 ) {
     print <<'EOF';
-usage: mtweet [ -request-token | <tweet> ]
+usage: mtweet [ --request-token | <tweet> ]
 
 The OAuth token is stored in ${HOME}/.mtweet-oauth
 EOF
@@ -39,7 +39,7 @@ EOF
 
 ###### request a new token
 
-elsif ($ARGV[0] eq '-request-token') {
+elsif ($ARGV[0] eq '--request-token') {
 
     # get request token
     my $request = Net::OAuth->request("request token")->new(
