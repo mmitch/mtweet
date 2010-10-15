@@ -2,6 +2,7 @@
 use strict;
 
 use Data::Dumper;
+use Encode;
 use HTTP::Request::Common;
 use LWP::UserAgent;
 use Net::OAuth;
@@ -138,6 +139,7 @@ else {
     $tweet =~ s/(^\s+|\s+$)//g;
     die "tweet empty"    if length $tweet < 1;
     die "tweet too long" if length $tweet > 140;
+    $tweet = Encode::decode('utf-8', $tweet);
 
     my $request = Net::OAuth->request("protected resource")->new(
 	consumer_key => $CONSUMER_KEY,
