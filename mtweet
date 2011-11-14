@@ -10,7 +10,7 @@ use Net::OAuth;
 require Crypt::SSLeay;
 
 # Twitter settings for mtweet-oauth
-# yeah, this is a shared secred now :-)
+# yeah, this is a shared secret now :-)
 my $CONSUMER_KEY =    'nbuhWpMZeVZ22AeqVjq0Q';
 my $CONSUMER_SECRET = 'uVXdQxjJjxLKYk90Fw7eVDgMNg8h2A6j6lBzdxTsYBU';
 my $REQUEST_URL =     'https://api.twitter.com/oauth/request_token';
