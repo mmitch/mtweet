@@ -101,11 +101,11 @@ elsif ($ARGV[0] eq '--request-token') {
 
     # store configuration
     umask 0077;
-    open STORE, '>', $oauth_file or die "can't open `$oauth_file': $!";
-    print STORE "token=$access_token\n";
-    print STORE "secret=$access_secret\n";
-    print STORE "user=$username\n";
-    close STORE or die "can't close `$oauth_file': $!";
+    open my $fh, '>', $oauth_file or die "can't open `$oauth_file': $!";
+    print $fh "token=$access_token\n";
+    print $fh "secret=$access_secret\n";
+    print $fh "user=$username\n";
+    close $fh or die "can't close `$oauth_file': $!";
 
 } 
 
@@ -116,15 +116,15 @@ else {
 
     # read configuration
     my ($token, $secret, $username);
-    open STORE, '<', $oauth_file or die "can't open `$oauth_file': $!";
-    while (my $line = <STORE>) {
+    open my $fh, '<', $oauth_file or die "can't open `$oauth_file': $!";
+    while (my $line = <$fh>) {
 	if ($line =~ /^([^=]+)=(.*)$/) {
 	    $token =    $2 if $1 eq 'token';
 	    $secret =   $2 if $1 eq 'secret';
 	    $username = $2 if $1 eq 'user';
 	}
     }
-    close STORE or die "can't close `$oauth_file': $!";
+    close $fh or die "can't close `$oauth_file': $!";
     
     die "no token in configuration"    unless defined $token;
     die "no secret in configuration"   unless defined $secret;
