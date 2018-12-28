@@ -135,7 +135,6 @@ else {
     
     # tweet it
     my $tweet = join ' ', @ARGV;
-    $tweet =~ s/\s+/ /g;
     $tweet =~ s/(^\s+|\s+$)//g;
     die "tweet empty"    if length $tweet < 1;
     die "tweet too long" if length $tweet > 280;
