@@ -16,7 +16,7 @@ my $CONSUMER_SECRET = 'uVXdQxjJjxLKYk90Fw7eVDgMNg8h2A6j6lBzdxTsYBU';
 my $REQUEST_URL =     'https://api.twitter.com/oauth/request_token';
 my $ACCESS_URL =      'https://api.twitter.com/oauth/access_token';
 my $AUTHORIZE_URL =   'https://api.twitter.com/oauth/authorize';
-my $TWEET_URL =       'http://api.twitter.com/1.1/statuses/update.json';
+my $TWEET_URL =       'https://api.twitter.com/1.1/statuses/update.json';
 
 
 # global settings
