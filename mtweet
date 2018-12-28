@@ -138,7 +138,7 @@ else {
     $tweet =~ s/\s+/ /g;
     $tweet =~ s/(^\s+|\s+$)//g;
     die "tweet empty"    if length $tweet < 1;
-    die "tweet too long" if length $tweet > 140;
+    die "tweet too long" if length $tweet > 280;
     $tweet = Encode::decode('utf-8', $tweet);
 
     my $request = Net::OAuth->request("protected resource")->new(
