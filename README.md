@@ -1,4 +1,6 @@
-mtweet - Mitch's commandline tweeter with OAuth support
+# THIS PROJECT HAS BEEN ARCHIVED because of the incompatible Twitter API v2 changes in 2023
+
+## mtweet - Mitch's commandline tweeter with OAuth support
 
 http://github.com/mmitch/mtweet
 licensed under GNU GPL
